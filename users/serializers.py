@@ -4,6 +4,9 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import ConfirmationCode, CustomUser
 
+class OAuthCodeSerializer(serializers.Serializer):
+    code = serializers.CharField()
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     @classmethod 
@@ -11,12 +14,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token['email'] = user.email 
         token["is_staff"] = user.is_staff
+        token["birthdate"] = user.isformat()
         return token 
     
 
 class UserBaseSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=150)
     password = serializers.CharField()
+    birthdate = serializers.DateField(required=False, allow_null=True)
 
 
 class AuthValidateSerializer(UserBaseSerializer):

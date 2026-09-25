@@ -18,12 +18,10 @@ from .serializers import (
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 
-class CustomTokenObtaimPairView(TokenObtainPairView):
+class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
     
-
-
-
 class AuthorizationAPIView(CreateAPIView):
     serializer_class = AuthValidateSerializer
 
@@ -58,17 +56,20 @@ class RegistrationAPIView(CreateAPIView):
 
         email = serializer.validated_data["email"]
         password = serializer.validated_data["password"]
+        birthdate = serializer.validated_data.get("birthdate")
 
         # Use transaction to ensure data consistency
         with transaction.atomic():
-            user = CustomUser.objects.create_user(
-                email=email, password=password, is_active=False
+           user = CustomUser.objects.create_user(
+                email=email,
+                password=password,
+                birthdate=birthdate,
+                is_active=False,
             )
+        # Create a random 6-digit code
+        code = "".join(random.choices(string.digits, k=6))
 
-            # Create a random 6-digit code
-            code = "".join(random.choices(string.digits, k=6))
-
-            confirmation_code = ConfirmationCode.objects.create(user=user, code=code)
+        confirmation_code = ConfirmationCode.objects.create(user=user, code=code)
 
         return Response(
             status=status.HTTP_201_CREATED,

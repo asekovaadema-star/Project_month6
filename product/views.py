@@ -8,6 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from common.permissions import CanEdit, IsAnonymous, IsOwner, IsModerator
+from datetime import date
+from common.validators import validate_user_age
 
 from .models import Category, Product, Review
 from .serializers import (
@@ -75,34 +77,38 @@ class ProductListCreateAPIView(ListCreateAPIView):
     queryset = Product.objects.select_related("category").all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsOwner | IsModerator | IsAnonymous]
+    # permission_classes = [IsOwner | IsModerator | IsAnonymous]
 
     def post(self, request, *args, **kwargs):
         serializer = ProductValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        email =request.auth.get("email")
+        birthdate = request.auth.get("birthdate")
 
-        # Get validated data
+        if birthdate:
+            birthdate = date.fromisoformat(birthdate)
+
+        validate_user_age(birthdate)
+
+        email = request.auth.get("email")
+
         title = serializer.validated_data.get("title")
         description = serializer.validated_data.get("description")
         price = serializer.validated_data.get("price")
         category = serializer.validated_data.get("category")
 
-        # Create product
         product = Product.objects.create(
             title=title,
             description=description,
             price=price,
             category=category,
             owner=request.user,
-
         )
 
         return Response(
-            data=ProductSerializer(product).data, status=status.HTTP_201_CREATED
+            data=ProductSerializer(product).data,
+            status=status.HTTP_201_CREATED
         )
-
 
 class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related("category").all()

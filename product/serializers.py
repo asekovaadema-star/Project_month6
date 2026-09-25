@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Category, Product, Review
 from rest_framework.exceptions import ValidationError
 
+
+
 class CategorySerializer(serializers.ModelSerializer):
     products_count = serializers.SerializerMethodField()
 
